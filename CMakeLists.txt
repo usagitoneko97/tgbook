@@ -14,6 +14,8 @@ if (CURL_FOUND)
     add_definitions(-DHAVE_CURL)
 endif()
 
+add_subdirectory(cpr)
+include_directories(${CPR_INCLUDE_DIRS})
 add_executable(hello_world main.cpp)
 
-target_link_libraries(hello_world /usr/local/lib/libTgBot.a ${CMAKE_THREAD_LIBS_INIT} ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${CURL_LIBRARIES})
+target_link_libraries(hello_world /usr/local/lib/libTgBot.a ${CMAKE_THREAD_LIBS_INIT} ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${CURL_LIBRARIES} ${CPR_LIBRARIES})

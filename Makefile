@@ -56,16 +56,29 @@ CMAKE_BINARY_DIR = /home/usagitoneko/CLionProjects/hello_world
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/usr/bin/cmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
 
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
 
-.PHONY : rebuild_cache/fast
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
 
 # Special rule for the target edit_cache
 edit_cache:
@@ -77,6 +90,39 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
+
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/usr/bin/cmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+
+.PHONY : rebuild_cache/fast
+
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+
+.PHONY : list_install_components/fast
+
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install
+
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -123,6 +169,357 @@ hello_world/fast:
 	$(MAKE) -f CMakeFiles/hello_world.dir/build.make CMakeFiles/hello_world.dir/build
 .PHONY : hello_world/fast
 
+#=============================================================================
+# Target rules for targets named uninstall
+
+# Build rule for target.
+uninstall: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 uninstall
+.PHONY : uninstall
+
+# fast build rule for target.
+uninstall/fast:
+	$(MAKE) -f cpr/opt/curl/CMakeFiles/uninstall.dir/build.make cpr/opt/curl/CMakeFiles/uninstall.dir/build
+.PHONY : uninstall/fast
+
+#=============================================================================
+# Target rules for targets named pdf
+
+# Build rule for target.
+pdf: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 pdf
+.PHONY : pdf
+
+# fast build rule for target.
+pdf/fast:
+	$(MAKE) -f cpr/opt/curl/docs/libcurl/CMakeFiles/pdf.dir/build.make cpr/opt/curl/docs/libcurl/CMakeFiles/pdf.dir/build
+.PHONY : pdf/fast
+
+#=============================================================================
+# Target rules for targets named html
+
+# Build rule for target.
+html: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 html
+.PHONY : html
+
+# fast build rule for target.
+html/fast:
+	$(MAKE) -f cpr/opt/curl/docs/libcurl/CMakeFiles/html.dir/build.make cpr/opt/curl/docs/libcurl/CMakeFiles/html.dir/build
+.PHONY : html/fast
+
+#=============================================================================
+# Target rules for targets named opts-pdf
+
+# Build rule for target.
+opts-pdf: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 opts-pdf
+.PHONY : opts-pdf
+
+# fast build rule for target.
+opts-pdf/fast:
+	$(MAKE) -f cpr/opt/curl/docs/libcurl/opts/CMakeFiles/opts-pdf.dir/build.make cpr/opt/curl/docs/libcurl/opts/CMakeFiles/opts-pdf.dir/build
+.PHONY : opts-pdf/fast
+
+#=============================================================================
+# Target rules for targets named opts-html
+
+# Build rule for target.
+opts-html: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 opts-html
+.PHONY : opts-html
+
+# fast build rule for target.
+opts-html/fast:
+	$(MAKE) -f cpr/opt/curl/docs/libcurl/opts/CMakeFiles/opts-html.dir/build.make cpr/opt/curl/docs/libcurl/opts/CMakeFiles/opts-html.dir/build
+.PHONY : opts-html/fast
+
+#=============================================================================
+# Target rules for targets named generate-curl.1
+
+# Build rule for target.
+generate-curl.1: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 generate-curl.1
+.PHONY : generate-curl.1
+
+# fast build rule for target.
+generate-curl.1/fast:
+	$(MAKE) -f cpr/opt/curl/docs/cmdline-opts/CMakeFiles/generate-curl.1.dir/build.make cpr/opt/curl/docs/cmdline-opts/CMakeFiles/generate-curl.1.dir/build
+.PHONY : generate-curl.1/fast
+
+#=============================================================================
+# Target rules for targets named libcurl
+
+# Build rule for target.
+libcurl: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 libcurl
+.PHONY : libcurl
+
+# fast build rule for target.
+libcurl/fast:
+	$(MAKE) -f cpr/opt/curl/lib/CMakeFiles/libcurl.dir/build.make cpr/opt/curl/lib/CMakeFiles/libcurl.dir/build
+.PHONY : libcurl/fast
+
+#=============================================================================
+# Target rules for targets named gtest_main
+
+# Build rule for target.
+gtest_main: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 gtest_main
+.PHONY : gtest_main
+
+# fast build rule for target.
+gtest_main/fast:
+	$(MAKE) -f cpr/opt/googletest/CMakeFiles/gtest_main.dir/build.make cpr/opt/googletest/CMakeFiles/gtest_main.dir/build
+.PHONY : gtest_main/fast
+
+#=============================================================================
+# Target rules for targets named gtest
+
+# Build rule for target.
+gtest: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 gtest
+.PHONY : gtest
+
+# fast build rule for target.
+gtest/fast:
+	$(MAKE) -f cpr/opt/googletest/CMakeFiles/gtest.dir/build.make cpr/opt/googletest/CMakeFiles/gtest.dir/build
+.PHONY : gtest/fast
+
+#=============================================================================
+# Target rules for targets named mongoose
+
+# Build rule for target.
+mongoose: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 mongoose
+.PHONY : mongoose
+
+# fast build rule for target.
+mongoose/fast:
+	$(MAKE) -f cpr/opt/mongoose/CMakeFiles/mongoose.dir/build.make cpr/opt/mongoose/CMakeFiles/mongoose.dir/build
+.PHONY : mongoose/fast
+
+#=============================================================================
+# Target rules for targets named cpr
+
+# Build rule for target.
+cpr: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 cpr
+.PHONY : cpr
+
+# fast build rule for target.
+cpr/fast:
+	$(MAKE) -f cpr/cpr/CMakeFiles/cpr.dir/build.make cpr/cpr/CMakeFiles/cpr.dir/build
+.PHONY : cpr/fast
+
+#=============================================================================
+# Target rules for targets named util_tests
+
+# Build rule for target.
+util_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 util_tests
+.PHONY : util_tests
+
+# fast build rule for target.
+util_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/util_tests.dir/build.make cpr/test/CMakeFiles/util_tests.dir/build
+.PHONY : util_tests/fast
+
+#=============================================================================
+# Target rules for targets named alternating_tests
+
+# Build rule for target.
+alternating_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 alternating_tests
+.PHONY : alternating_tests
+
+# fast build rule for target.
+alternating_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/alternating_tests.dir/build.make cpr/test/CMakeFiles/alternating_tests.dir/build
+.PHONY : alternating_tests/fast
+
+#=============================================================================
+# Target rules for targets named error_tests
+
+# Build rule for target.
+error_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 error_tests
+.PHONY : error_tests
+
+# fast build rule for target.
+error_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/error_tests.dir/build.make cpr/test/CMakeFiles/error_tests.dir/build
+.PHONY : error_tests/fast
+
+#=============================================================================
+# Target rules for targets named patch_tests
+
+# Build rule for target.
+patch_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 patch_tests
+.PHONY : patch_tests
+
+# fast build rule for target.
+patch_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/patch_tests.dir/build.make cpr/test/CMakeFiles/patch_tests.dir/build
+.PHONY : patch_tests/fast
+
+#=============================================================================
+# Target rules for targets named options_tests
+
+# Build rule for target.
+options_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 options_tests
+.PHONY : options_tests
+
+# fast build rule for target.
+options_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/options_tests.dir/build.make cpr/test/CMakeFiles/options_tests.dir/build
+.PHONY : options_tests/fast
+
+#=============================================================================
+# Target rules for targets named session_tests
+
+# Build rule for target.
+session_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 session_tests
+.PHONY : session_tests
+
+# fast build rule for target.
+session_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/session_tests.dir/build.make cpr/test/CMakeFiles/session_tests.dir/build
+.PHONY : session_tests/fast
+
+#=============================================================================
+# Target rules for targets named post_tests
+
+# Build rule for target.
+post_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 post_tests
+.PHONY : post_tests
+
+# fast build rule for target.
+post_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/post_tests.dir/build.make cpr/test/CMakeFiles/post_tests.dir/build
+.PHONY : post_tests/fast
+
+#=============================================================================
+# Target rules for targets named head_tests
+
+# Build rule for target.
+head_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 head_tests
+.PHONY : head_tests
+
+# fast build rule for target.
+head_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/head_tests.dir/build.make cpr/test/CMakeFiles/head_tests.dir/build
+.PHONY : head_tests/fast
+
+#=============================================================================
+# Target rules for targets named callback_tests
+
+# Build rule for target.
+callback_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 callback_tests
+.PHONY : callback_tests
+
+# fast build rule for target.
+callback_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/callback_tests.dir/build.make cpr/test/CMakeFiles/callback_tests.dir/build
+.PHONY : callback_tests/fast
+
+#=============================================================================
+# Target rules for targets named async_tests
+
+# Build rule for target.
+async_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 async_tests
+.PHONY : async_tests
+
+# fast build rule for target.
+async_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/async_tests.dir/build.make cpr/test/CMakeFiles/async_tests.dir/build
+.PHONY : async_tests/fast
+
+#=============================================================================
+# Target rules for targets named test_server
+
+# Build rule for target.
+test_server: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_server
+.PHONY : test_server
+
+# fast build rule for target.
+test_server/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/test_server.dir/build.make cpr/test/CMakeFiles/test_server.dir/build
+.PHONY : test_server/fast
+
+#=============================================================================
+# Target rules for targets named get_tests
+
+# Build rule for target.
+get_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 get_tests
+.PHONY : get_tests
+
+# fast build rule for target.
+get_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/get_tests.dir/build.make cpr/test/CMakeFiles/get_tests.dir/build
+.PHONY : get_tests/fast
+
+#=============================================================================
+# Target rules for targets named delete_tests
+
+# Build rule for target.
+delete_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 delete_tests
+.PHONY : delete_tests
+
+# fast build rule for target.
+delete_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/delete_tests.dir/build.make cpr/test/CMakeFiles/delete_tests.dir/build
+.PHONY : delete_tests/fast
+
+#=============================================================================
+# Target rules for targets named proxy_tests
+
+# Build rule for target.
+proxy_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 proxy_tests
+.PHONY : proxy_tests
+
+# fast build rule for target.
+proxy_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/proxy_tests.dir/build.make cpr/test/CMakeFiles/proxy_tests.dir/build
+.PHONY : proxy_tests/fast
+
+#=============================================================================
+# Target rules for targets named put_tests
+
+# Build rule for target.
+put_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 put_tests
+.PHONY : put_tests
+
+# fast build rule for target.
+put_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/put_tests.dir/build.make cpr/test/CMakeFiles/put_tests.dir/build
+.PHONY : put_tests/fast
+
+#=============================================================================
+# Target rules for targets named raw_body_tests
+
+# Build rule for target.
+raw_body_tests: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 raw_body_tests
+.PHONY : raw_body_tests
+
+# fast build rule for target.
+raw_body_tests/fast:
+	$(MAKE) -f cpr/test/CMakeFiles/raw_body_tests.dir/build.make cpr/test/CMakeFiles/raw_body_tests.dir/build
+.PHONY : raw_body_tests/fast
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -156,9 +553,40 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... rebuild_cache"
-	@echo "... hello_world"
+	@echo "... install/strip"
+	@echo "... install/local"
 	@echo "... edit_cache"
+	@echo "... hello_world"
+	@echo "... rebuild_cache"
+	@echo "... list_install_components"
+	@echo "... install"
+	@echo "... uninstall"
+	@echo "... pdf"
+	@echo "... html"
+	@echo "... opts-pdf"
+	@echo "... opts-html"
+	@echo "... generate-curl.1"
+	@echo "... libcurl"
+	@echo "... gtest_main"
+	@echo "... gtest"
+	@echo "... mongoose"
+	@echo "... cpr"
+	@echo "... util_tests"
+	@echo "... alternating_tests"
+	@echo "... error_tests"
+	@echo "... patch_tests"
+	@echo "... options_tests"
+	@echo "... session_tests"
+	@echo "... post_tests"
+	@echo "... head_tests"
+	@echo "... callback_tests"
+	@echo "... async_tests"
+	@echo "... test_server"
+	@echo "... get_tests"
+	@echo "... delete_tests"
+	@echo "... proxy_tests"
+	@echo "... put_tests"
+	@echo "... raw_body_tests"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
