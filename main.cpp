@@ -32,11 +32,13 @@ string BookHandler::get_book_summary() {
 
 class Book {
 public:
-    Book(const string &title, std::vector<string> &author, unsigned int calibreId=-1)
-            : title(title), author(author), calibre_id(calibreId) {}
+    Book(const string &title, std::vector<string> &author, unsigned int calibreId = -1,
+            std::vector<string> format={""}, std::map<string, string> format_path=std::map<string, string>())
+            : title(title), author(author), calibre_id(calibreId), formats(format), format_path(format_path){}
 
-    Book(const string &title, const string &_author, unsigned int calibreId=-1)
-            : title(title), calibre_id(calibreId){
+    Book(const string &title, const string &_author, unsigned int calibreId=-1, std::vector<string> format={""},
+         std::map<string, string> format_path=std::map<string, string>())
+            : title(title), calibre_id(calibreId), formats(format), format_path(format_path){
         author.push_back(_author);
     }
     friend ostream& operator<<(ostream& os, const Book& book);
@@ -45,7 +47,8 @@ public:
 private:
     string title;
     unsigned int calibre_id;
-    std::vector<string> author;
+    std::vector<string> author, formats;
+    std::map<string, string> format_path;
 
 public:
     unsigned int getCalibreId() const {
@@ -59,6 +62,10 @@ public:
     const vector<string> &getAuthor() const {
         return author;
     }
+
+    const vector<string> &getFormat() const {
+        return formats;
+    }
 };
 
 string Book::dump() const {
@@ -66,14 +73,20 @@ string Book::dump() const {
     for (const string& a : author) {
         authors_repr = authors_repr + a + ',';
     }
-    return std::to_string(calibre_id) + ": " + title + " by " + authors_repr;
+    string first_line = std::to_string(calibre_id) + ": " + title + " by " + authors_repr;
+    string _formats = formats[0];
+    for (auto f = (formats.begin() + 1); f != formats.end(); ++f) {
+        _formats.append(", " + *f);
+    }
+    string format_repr = "\n    available formats: " + _formats;
+    return first_line + format_repr;
 }
 ostream& operator<<(ostream& os, const Book& book) {
     os << book.dump();
     return os;
 }
 
-Book& get_book_info(const string& title, const string& author="") {
+Book& query_goodreads(const string& title, const string& author="") {
     cpr::Response r = cpr::Get(cpr::Url{"https://www.goodreads.com/search/index.xml"},
                                cpr::Parameters{{"key", "rlrW2MX64G1FMRxPJKVL7w"},
                                                {"q", title}}
@@ -90,22 +103,37 @@ std::vector<Book> search_calibre(const string &title) {
                                cpr::Parameters{{"query", title},
                                                {"sort_order", "desc"}}
     );
-    nlohmann::json json = nlohmann::json::parse(r.text);
-    std::vector<int> value = json.value("book_ids", std::vector<int>{-1});
-    std::vector<Book> books_found;
-    for (int book_id : value) {
-        string url = "192.168.1.105:8080/ajax/book/" + std::to_string(book_id);
-        cpr::Response book_response = cpr::Get(cpr::Url{url},
-                                               cpr::Parameters{{"query", title},
-                                                               {"sort_order", "desc"}}
-        );
-        nlohmann::json book_json = nlohmann::json::parse(book_response.text);
-        string title = book_json.value("title", "invalid_title");
-        std::vector<string> authors = book_json.value("authors", std::vector<string>{"invalid author"});
-        books_found.emplace_back(Book(title, authors, book_id));
+    std::vector<Book> books_found={};
+    if (r.text.length() > 0) {
+        nlohmann::json json = nlohmann::json::parse(r.text);
+        std::vector<int> value = json.value("book_ids", std::vector<int>{-1});
+        std::map<string ,string> format_path;
+        for (int book_id : value) {
+            string url = "192.168.1.105:8080/ajax/book/" + std::to_string(book_id);
+            cpr::Response book_response = cpr::Get(cpr::Url{url});
+            nlohmann::json book_json = nlohmann::json::parse(book_response.text);
+            string title = book_json.value("title", "invalid_title");
+            std::vector<string> formats = book_json.value("formats", std::vector<string>{"empty formats"});
+            std::vector<string> authors = book_json.value("authors", std::vector<string>{"invalid author"});
+            for (string f : formats) {
+                string p = book_json.at("format_metadata").at(f).at("path").get<string>();
+                format_path[f] = p;
+            }
+            books_found.emplace_back(Book(title, authors, book_id, formats, format_path));
+        }
+        return books_found;
     }
-    return books_found;
 }
+
+string get_book_path(int book_id, string& format) {
+    std::map<string ,string> format_path;
+    string url = "192.168.1.105:8080/ajax/book/" + std::to_string(book_id);
+    cpr::Response book_response = cpr::Get(cpr::Url{url});
+    nlohmann::json book_json = nlohmann::json::parse(book_response.text);
+    string p = book_json.at("format_metadata").at(format).at("path").get<string>();
+    return p;
+}
+
 
 std::vector<Book> search_calibre(Book& book) {
     return search_calibre(book.getTitle());
@@ -125,8 +153,19 @@ int main() {
         }
         bot.getApi().sendMessage(message->chat->id, messages);
     });
-    bot.getEvents().onCommand("send", [&bot](TgBot::Message::Ptr message) {
-        bot.getApi().sendDocument(message->chat->id, TgBot::InputFile::fromFile("/media/Download/something.txt", "text/plain"));
+    bot.getEvents().onCommand("book-get", [&bot](TgBot::Message::Ptr message) {
+        std:istringstream iss(message->text.substr(10, message->text.length()));
+        string s;
+        std::vector<string> commands;
+        while (getline(iss, s, ' ')) {
+            commands.push_back(s);
+        }
+        if (commands.size() >= 2){
+            int book_id = std::stoi(commands[0]);
+            string book_format = commands[1];
+            string path = get_book_path(book_id, book_format);
+            bot.getApi().sendDocument(message->chat->id, TgBot::InputFile::fromFile(path, "text/plain"));
+        }
     });
     try {
         printf("Bot username: %s\n", bot.getApi().getMe()->username.c_str());
