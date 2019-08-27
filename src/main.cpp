@@ -1,3 +1,4 @@
+#include "Book.h"
 #include <rapidxml/rapidxml_print.hpp>
 #include <rapidxml/rapidxml.hpp>
 #include <nlohmann/json.hpp>
@@ -27,63 +28,6 @@ public:
 string BookHandler::get_book_summary() {
     string s = "the chosen book is " + name;
     return s;
-}
-
-
-class Book {
-public:
-    Book(const string &title, std::vector<string> &author, unsigned int calibreId = -1,
-            std::vector<string> format={""}, std::map<string, string> format_path=std::map<string, string>())
-            : title(title), author(author), calibre_id(calibreId), formats(format), format_path(format_path){}
-
-    Book(const string &title, const string &_author, unsigned int calibreId=-1, std::vector<string> format={""},
-         std::map<string, string> format_path=std::map<string, string>())
-            : title(title), calibre_id(calibreId), formats(format), format_path(format_path){
-        author.push_back(_author);
-    }
-    friend ostream& operator<<(ostream& os, const Book& book);
-    string dump() const;
-
-private:
-    string title;
-    unsigned int calibre_id;
-    std::vector<string> author, formats;
-    std::map<string, string> format_path;
-
-public:
-    unsigned int getCalibreId() const {
-        return calibre_id;
-    }
-
-    const string &getTitle() const {
-        return title;
-    }
-
-    const vector<string> &getAuthor() const {
-        return author;
-    }
-
-    const vector<string> &getFormat() const {
-        return formats;
-    }
-};
-
-string Book::dump() const {
-    string authors_repr;
-    for (const string& a : author) {
-        authors_repr = authors_repr + a + ',';
-    }
-    string first_line = std::to_string(calibre_id) + ": " + title + " by " + authors_repr;
-    string _formats = formats[0];
-    for (auto f = (formats.begin() + 1); f != formats.end(); ++f) {
-        _formats.append(", " + *f);
-    }
-    string format_repr = "\n    available formats: " + _formats;
-    return first_line + format_repr;
-}
-ostream& operator<<(ostream& os, const Book& book) {
-    os << book.dump();
-    return os;
 }
 
 Book& query_goodreads(const string& title, const string& author="") {
