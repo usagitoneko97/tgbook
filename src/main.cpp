@@ -1,4 +1,3 @@
-#include "Book.h"
 #include <rapidxml/rapidxml_print.hpp>
 #include <rapidxml/rapidxml.hpp>
 #include <nlohmann/json.hpp>
@@ -11,24 +10,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
-
 #include <tgbot/tgbot.h>
+
+#include "Book.h"
+#include "calibre_api.h"
+#include "spdlog/spdlog.h"
 
 using namespace std;
 using namespace TgBot;
 
-class BookHandler {
-    string name;
-public:
-    explicit BookHandler(string& s): name(s) {};
-    string get_name() {return name;}
-    string get_book_summary();
-};
-
-string BookHandler::get_book_summary() {
-    string s = "the chosen book is " + name;
-    return s;
-}
 
 Book& query_goodreads(const string& title, const string& author="") {
     cpr::Response r = cpr::Get(cpr::Url{"https://www.goodreads.com/search/index.xml"},
@@ -42,32 +32,6 @@ Book& query_goodreads(const string& title, const string& author="") {
     return *b;
 }
 
-std::vector<Book> search_calibre(const string &title) {
-    cpr::Response r = cpr::Get(cpr::Url{"192.168.1.105:8080/ajax/search"},
-                               cpr::Parameters{{"query", title},
-                                               {"sort_order", "desc"}}
-    );
-    std::vector<Book> books_found={};
-    if (r.text.length() > 0) {
-        nlohmann::json json = nlohmann::json::parse(r.text);
-        std::vector<int> value = json.value("book_ids", std::vector<int>{-1});
-        std::map<string ,string> format_path;
-        for (int book_id : value) {
-            string url = "192.168.1.105:8080/ajax/book/" + std::to_string(book_id);
-            cpr::Response book_response = cpr::Get(cpr::Url{url});
-            nlohmann::json book_json = nlohmann::json::parse(book_response.text);
-            string title = book_json.value("title", "invalid_title");
-            std::vector<string> formats = book_json.value("formats", std::vector<string>{"empty formats"});
-            std::vector<string> authors = book_json.value("authors", std::vector<string>{"invalid author"});
-            for (string f : formats) {
-                string p = book_json.at("format_metadata").at(f).at("path").get<string>();
-                format_path[f] = p;
-            }
-            books_found.emplace_back(Book(title, authors, book_id, formats, format_path));
-        }
-        return books_found;
-    }
-}
 
 string get_book_path(int book_id, string& format) {
     std::map<string ,string> format_path;
@@ -79,26 +43,39 @@ string get_book_path(int book_id, string& format) {
 }
 
 
-std::vector<Book> search_calibre(Book& book) {
-    return search_calibre(book.getTitle());
-}
-
-
 int main() {
     string token("964403607:AAFaCL75bqTie0r8FBJAsHcC0c3nkNtS0j4");
+    string calibre_ip = "192.168.1.105:8080";
+    spdlog::info("using token: {}", token);
+
+    //initialize all interface
     TgBot::Bot bot(token);
-    bot.getEvents().onCommand("book", [&bot](TgBot::Message::Ptr message) {
+    CalibreApi calibre_api(calibre_ip);
+
+    bot.getEvents().onCommand("book", [&bot, &calibre_api](const TgBot::Message::Ptr message) {
         string book_title = message->text.substr(6, message->text.length());
-        cout << book_title;
-        std::vector<Book> calibre_books = search_calibre(book_title);
-        string messages("books available in server:\n");
-        for (unsigned long i=0; i<calibre_books.size(); i++) {
-            messages += calibre_books[i].dump() += "\n";
+        try {
+            std::vector<int> book_ids = calibre_api.search(book_title);
+            std::vector<Book> books_found;
+            string messages("books available in server:\n");
+            for (int id : book_ids) {
+                Book located_book = calibre_api.locate_book(id);
+                books_found.emplace_back(located_book);
+                messages += located_book.dump() += "\n";
+            }
+            if (messages.length() > 200) {
+                // redact the length since tgbot can't handle the length
+                messages = messages.substr(0, 200);
+                messages += "\n\n REDACTED since it's too long. Try to scope down the search";
+            }
+            bot.getApi().sendMessage(message->chat->id, messages);
         }
-        bot.getApi().sendMessage(message->chat->id, messages);
+        catch (CalibreException& e){
+            bot.getApi().sendMessage(message->chat->id, e.what());
+        }
     });
     bot.getEvents().onCommand("book-get", [&bot](TgBot::Message::Ptr message) {
-        std:istringstream iss(message->text.substr(10, message->text.length()));
+        std::istringstream iss(message->text.substr(10, message->text.length()));
         string s;
         std::vector<string> commands;
         while (getline(iss, s, ' ')) {

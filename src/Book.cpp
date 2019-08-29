@@ -21,4 +21,3 @@ ostream& operator<<(ostream& os, const Book& book) {
     os << book.dump();
     return os;
 }
-
