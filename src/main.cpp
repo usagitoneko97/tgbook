@@ -1,20 +1,17 @@
-#include <rapidxml/rapidxml_print.hpp>
 #include <rapidxml/rapidxml.hpp>
 #include <nlohmann/json.hpp>
 #include <cpr/response.h>
 #include <cpr/cpr.h>
-#include <iostream>
 #include <string>
 #include <list>
-#include <csignal>
 #include <cstdio>
-#include <cstdlib>
 #include <exception>
 #include <tgbot/tgbot.h>
 
 #include "Book.h"
 #include "calibre_api.h"
 #include "spdlog/spdlog.h"
+#include "parser.h"
 
 using namespace std;
 using namespace TgBot;
@@ -33,7 +30,7 @@ Book& query_goodreads(const string& title, const string& author="") {
 }
 
 
-string get_book_path(int book_id, string& format) {
+string get_book_path(int book_id, const string& format) {
     std::map<string ,string> format_path;
     string url = "192.168.1.105:8080/ajax/book/" + std::to_string(book_id);
     cpr::Response book_response = cpr::Get(cpr::Url{url});
@@ -63,31 +60,28 @@ int main() {
                 books_found.emplace_back(located_book);
                 messages += located_book.dump() += "\n";
             }
-            if (messages.length() > 200) {
-                // redact the length since tgbot can't handle the length
-                messages = messages.substr(0, 200);
-                messages += "\n\n REDACTED since it's too long. Try to scope down the search";
+            try{
+                bot.getApi().sendMessage(message->chat->id, messages);
             }
-            bot.getApi().sendMessage(message->chat->id, messages);
+            catch (std::exception& e) {
+                spdlog::warn("Message length is too long.");
+                messages = messages.substr(0, 300);
+                messages += "\n\n REDACTED since it's too long. Try to scope down the search";
+                bot.getApi().sendMessage(message->chat->id, messages);
+            }
+
         }
         catch (CalibreException& e){
             bot.getApi().sendMessage(message->chat->id, e.what());
         }
     });
     bot.getEvents().onCommand("book-get", [&bot](TgBot::Message::Ptr message) {
-        std::istringstream iss(message->text.substr(10, message->text.length()));
-        string s;
-        std::vector<string> commands;
-        while (getline(iss, s, ' ')) {
-            commands.push_back(s);
-        }
-        if (commands.size() >= 2){
-            int book_id = std::stoi(commands[0]);
-            string book_format = commands[1];
-            string path = get_book_path(book_id, book_format);
-            bot.getApi().sendDocument(message->chat->id, TgBot::InputFile::fromFile(path, "text/plain"));
-        }
+        std::shared_ptr<BookGetParser> parser = Parser<BookGetParser>().parse(message->text);
+        string path = get_book_path(parser->getBookId(), parser->getBookFormat());
+        spdlog::info("trying to get book from path: {}", path);
+        bot.getApi().sendDocument(message->chat->id, TgBot::InputFile::fromFile(path, "text/plain"));
     });
+
     try {
         printf("Bot username: %s\n", bot.getApi().getMe()->username.c_str());
         TgBot::TgLongPoll longPoll(bot);

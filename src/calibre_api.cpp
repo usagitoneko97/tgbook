@@ -16,8 +16,8 @@ std::vector<int> CalibreApi::search(const string &title) {
                                cpr::Parameters{{"query", title},
                                                {"sort_order", "desc"}});
     if (r.status_code == 200){
-        nlohmann::json json = nlohmann::json::parse(r.text);
         try {
+            nlohmann::json json = nlohmann::json::parse(r.text);
             std::vector<int> value = json.value("book_ids", std::vector<int>{-1});
             string book_ids_str = "";
             for (int id : value)
