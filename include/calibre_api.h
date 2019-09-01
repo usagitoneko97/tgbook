@@ -11,7 +11,7 @@
 
 class CalibreApi {
 public:
-    explicit CalibreApi(string& ip) : calibre_ip(ip) {}
+    explicit CalibreApi(const string& ip) : calibre_ip(ip) {}
     std::vector<int>    search(const string &title);
     Book                locate_book(int book_id);
     string              get_book_path(int book_id, const string& format);

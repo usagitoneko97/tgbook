@@ -17,9 +17,9 @@ using namespace TgBot;
 
 
 int main() {
-    string goodreads_key = "rlrW2MX64G1FMRxPJKVL7w";
-    string token("964403607:AAFaCL75bqTie0r8FBJAsHcC0c3nkNtS0j4");
-    string calibre_ip = "192.168.1.105:8080";
+    const string goodreads_key = std::string(std::getenv("GOODREADS_KEY"));
+    const string token = std::string(std::getenv("TG_TOKEN"));
+    const string calibre_ip = std::string(std::getenv("CALIBRE_IP"));
     spdlog::info("calibre using IP: {}", calibre_ip);
     spdlog::info("using telegram token: {}", token);
     spdlog::info("using goodreads developer key: {}", goodreads_key);

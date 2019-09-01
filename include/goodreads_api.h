@@ -10,7 +10,7 @@
 
 class GoodreadsApi {
 public:
-    explicit GoodreadsApi(string& developer_key) : key(developer_key) {};
+    explicit GoodreadsApi(const string& developer_key) : key(developer_key) {};
     std::shared_ptr<Book> search(const std::string& title) const;
 private:
     std::string key;
