@@ -38,8 +38,8 @@ public:
     void construct(std::vector<std::string> commands) ;
 
 private:
-    int book_id;
-    std::string book_format;
+    int             book_id;
+    std::string     book_format;
 };
 
 std::vector<std::string> parse(std::string& message);

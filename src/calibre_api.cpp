@@ -69,7 +69,31 @@ Book CalibreApi::locate_book(int book_id) {
         throw CalibreException();
     }
     else {
-        spdlog::error("unknown response code");
+        spdlog::error("unknown response code while running {}", url);
         throw CalibreException();
     }
 }
+
+string CalibreApi::get_book_path(int book_id, const string& format) {
+    std::map<string ,string> format_path;
+    string url = calibre_ip + "/ajax/book/" + std::to_string(book_id);
+    spdlog::info("Getting response from {}", url);
+    try{
+        cpr::Response book_response = cpr::Get(cpr::Url{url});
+        if (book_response.status_code == 200) {
+            nlohmann::json book_json = nlohmann::json::parse(book_response.text);
+            string p = book_json.at("format_metadata").at(format).at("path").get<string>();
+            return p;
+        }
+        else {
+            spdlog::error("unknown response code while running {}", url);
+            throw CalibreException();
+        }
+
+    }
+    catch (nlohmann::detail::parse_error& e) {
+        spdlog::error("Error parsing the response. Is the server running? Is the url correct?");
+    }
+
+}
+

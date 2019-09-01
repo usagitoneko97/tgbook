@@ -29,10 +29,10 @@ public:
     string dump() const;
 
 private:
-    string title;
-    unsigned int calibre_id;
-    std::vector<string> author, formats;
-    std::map<string, string> format_path;
+    string                      title;
+    unsigned int                calibre_id;
+    std::vector<string>         author, formats;
+    std::map<string, string>    format_path;
 
 public:
     unsigned int getCalibreId() const {
