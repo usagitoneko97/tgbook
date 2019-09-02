@@ -1,3 +1,6 @@
 [submodule "cpr"]
-	path = cpr
+	path = 3rd-party/cpr
 	url = https://github.com/whoshuu/cpr.git
+[submodule "3rd-party/googletest"]
+	path = 3rd-party/googletest
+	url = https://github.com/google/googletest.git

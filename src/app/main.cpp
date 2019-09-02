@@ -5,7 +5,7 @@
 #include <exception>
 #include <tgbot/tgbot.h>
 
-#include "Book.h"
+#include "book.h"
 #include "calibre_api.h"
 #include "goodreads_api.h"
 #include "spdlog/spdlog.h"

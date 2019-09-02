@@ -6,7 +6,7 @@
 #include <rapidxml/rapidxml.hpp>
 #include <cpr/response.h>
 #include <cpr/cpr.h>
-#include "Book.h"
+#include "book.h"
 #include "goodreads_api.h"
 
 

@@ -6,7 +6,7 @@
 #define TGBOOK_GOODREADS_API_H
 
 #include <string>
-#include "Book.h"
+#include "book.h"
 
 class GoodreadsApi {
 public:
