@@ -75,6 +75,10 @@ Book CalibreApi::locate_book(int book_id) {
 }
 
 string CalibreApi::get_book_path(int book_id, const string& format) {
+    if (format.length() == 0) {
+        spdlog::error("Format unspecified.");
+        throw CalibreException("Format unspecified.");
+    }
     std::map<string ,string> format_path;
     string url = calibre_ip + "/ajax/book/" + std::to_string(book_id);
     spdlog::info("Getting response from {}", url);
@@ -94,6 +98,4 @@ string CalibreApi::get_book_path(int book_id, const string& format) {
     catch (nlohmann::detail::parse_error& e) {
         spdlog::error("Error parsing the response. Is the server running? Is the url correct?");
     }
-
 }
-

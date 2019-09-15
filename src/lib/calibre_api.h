@@ -12,10 +12,10 @@
 class CalibreApi {
 public:
     explicit CalibreApi(const string& ip) : calibre_ip(ip) {}
+
     std::vector<int>    search(const string &title);
     Book                locate_book(int book_id);
     string              get_book_path(int book_id, const string& format);
-
 private:
     string              calibre_ip;
 };
@@ -24,8 +24,12 @@ class CalibreException : std::exception {
 public:
     const char* what() const noexcept {
         // TODO: implement custom exception message
-        return "Calibre Exceptions";
+        return message.c_str();
     }
+    explicit CalibreException(const string message="Calibre Exception") : message(message) {}
+
+private:
+    string message;
 };
 
 #endif //TGBOOK_CALIBRE_API_H

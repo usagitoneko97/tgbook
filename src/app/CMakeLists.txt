@@ -8,7 +8,5 @@ if (CURL_FOUND)
     include_directories(${CURL_INCLUDE_DIRS})
     add_definitions(-DHAVE_CURL)
 endif()
-include_directories(/usr/local/include ${OPENSSL_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CPR_INCLUDE_DIRS} "${tgbook_SOURCE_DIR}/include")
+include_directories(/usr/local/include ${OPENSSL_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CPR_INCLUDE_DIRS} "${tgbook_SOURCE_DIR}/lib")
 target_link_libraries(tgbook PRIVATE api_library /usr/local/lib/libTgBot.a ${CMAKE_THREAD_LIBS_INIT} ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES})
-
-

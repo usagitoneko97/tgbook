@@ -1,10 +1,9 @@
-file(GLOB HEADER_LIST "${tgbook_SOURCE_DIR}/include/lib/*.h")
-message(${HEADER_LIST})
+file(GLOB HEADER_LIST "./*.h")
 file(GLOB SOURCE_LIST "*.cpp")
 
 add_library(api_library ${SOURCE_LIST} ${HEADER_LIST})
 find_package(Boost COMPONENTS system REQUIRED)
 
-target_include_directories(api_library PUBLIC "${tgbook_SOURCE_DIR}/include/lib")
+target_include_directories(api_library PUBLIC "./")
 target_link_libraries(api_library  ${Boost_LIBRARIES} ${CURL_LIBRARIES} ${CPR_LIBRARIES})
 
