@@ -8,9 +8,10 @@
 #include <cpr/cpr.h>
 #include "spdlog/spdlog.h"
 #include "calibre_api.h"
+#include "exceptions.h"
 
 std::vector<int> CalibreApi::search(const string &title) {
-    spdlog::info("searching book title {} in calibre ip: {}", title, calibre_ip);
+    spdlog::info("searching book title: {} in calibre ip: {}", title, calibre_ip);
     string url = calibre_ip + "/ajax/search";
     cpr::Response r = cpr::Get(cpr::Url{url},
                                cpr::Parameters{{"query", title},
@@ -26,17 +27,14 @@ std::vector<int> CalibreApi::search(const string &title) {
             return value;
         }
         catch (std::exception& e) {
-            spdlog::error("Couldn't process response for query {}", title);
-            throw CalibreException();
+            throw CalibreException("Couldn't process response for query {}", title);
         }
     }
     else if (r.status_code == 404) {
-        spdlog::error("Couldn't get a response from {}. Please check calibre connection", calibre_ip);
-        throw CalibreException();
+        throw CalibreException("Couldn't get a response from {}. Please check calibre connection", calibre_ip);
     }
     else {
-        spdlog::error("unknown response code");
-        throw CalibreException();
+        throw CalibreException("unknown response code while running {}. Please check calibre connection", url);
     }
 }
 
@@ -60,24 +58,20 @@ Book CalibreApi::locate_book(int book_id) {
             return Book(title, authors, book_id, formats, format_path);
         }
         catch (std::exception& e) {
-            spdlog::error("Couldn't process response for book id {}", book_id);
-            throw CalibreException();
+            throw CalibreException("Couldn't process response for book id {}", book_id);
         }
     }
     else if (book_response.status_code == 404) {
-        spdlog::error("Book ids {} does not exist in calibre library: {]", book_id, calibre_ip);
-        throw CalibreException();
+        throw CalibreException("Book ids {} does not exist in calibre library: {]", book_id, calibre_ip);
     }
     else {
-        spdlog::error("unknown response code while running {}", url);
-        throw CalibreException();
+        throw CalibreException("unknown response code while running {}. Please check calibre connection.", url);
     }
 }
 
 string CalibreApi::get_book_path(int book_id, const string& format) {
     if (format.length() == 0) {
-        spdlog::error("Format unspecified.");
-        throw CalibreException("Format unspecified.");
+        throw CalibreException("Book Format unspecified.");
     }
     std::map<string ,string> format_path;
     string url = calibre_ip + "/ajax/book/" + std::to_string(book_id);
@@ -90,12 +84,11 @@ string CalibreApi::get_book_path(int book_id, const string& format) {
             return p;
         }
         else {
-            spdlog::error("unknown response code while running {}", url);
-            throw CalibreException();
+            throw CalibreException("unknown response code while running {}", url);
         }
 
     }
     catch (nlohmann::detail::parse_error& e) {
-        spdlog::error("Error parsing the response. Is the server running? Is the url correct?");
+        throw CalibreException("Error parsing the response. Is the server running? Is the url correct?");
     }
 }
