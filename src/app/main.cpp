@@ -2,7 +2,6 @@
 #include <string>
 #include <exception>
 #include <tgbot/tgbot.h>
-#include <fmt/format.h>
 #include <functional>
 
 #include "book.h"
@@ -11,23 +10,26 @@
 #include "spdlog/spdlog.h"
 #include "parser.h"
 #include "exceptions.h"
+#include "api_instance.h"
 
 using namespace std;
 using namespace TgBot;
 
-using CommandFunc = std::function<void(TgBot::Bot& bot, const TgBot::Message::Ptr message, CalibreApi& calibre_api)>;
+using CommandFunc = std::function<void(TgBot::Bot& bot, const TgBot::Message::Ptr message)>;
 
-inline void _wrapper(CommandFunc& func, TgBot::Bot& bot, const TgBot::Message::Ptr& message, CalibreApi& calibre_api) {
+inline void _wrapper(CommandFunc& func, TgBot::Bot& bot, const TgBot::Message::Ptr& message) {
     try{
         spdlog::info("received commands : {}", message->text);
-        func(bot, message, calibre_api);
+        func(bot, message);
     }
     catch (CalibreException& e) {
         throw TgBookException(bot, message->chat->id, e.what());
     }
 }
 
-void command_book(TgBot::Bot& bot, const TgBot::Message::Ptr message, CalibreApi& calibre_api) {
+void command_book(TgBot::Bot& bot, const TgBot::Message::Ptr message) {
+    CalibreApi calibre_api = ApiHub::getOrInitInstance<CalibreApi>();
+    GoodreadsApi goodreads_api = ApiHub::getOrInitInstance<GoodreadsApi>();
     std::shared_ptr<BookParser> parser = Parser<BookParser>().parse(message->text);
     switch(parser->getMode()) {
         case BookParser::TITLE: {
@@ -49,10 +51,14 @@ void command_book(TgBot::Bot& bot, const TgBot::Message::Ptr message, CalibreApi
                 bot.getApi().sendMessage(message->chat->id, messages);
             }
         }
+        case BookParser::ISBN: {
+            // Search Isbn in goodreads for the title. And use it
+        }
     }
 }
 
-void command_book_dl(TgBot::Bot& bot, const TgBot::Message::Ptr message, CalibreApi& calibre_api) {
+void command_book_dl(TgBot::Bot& bot, const TgBot::Message::Ptr message) {
+    CalibreApi calibre_api = ApiHub::getOrInitInstance<CalibreApi>();
     std::shared_ptr<BookGetParser> parser = Parser<BookGetParser>().parse(message->text);
     string path = calibre_api.get_book_path(parser->getBookId(), parser->getBookFormat());
     spdlog::info("trying to get book from path: {}", path);
@@ -60,8 +66,8 @@ void command_book_dl(TgBot::Bot& bot, const TgBot::Message::Ptr message, Calibre
     spdlog::info("successfully sent document to chat id: {}", message->chat->id);
 }
 
-inline void register_command_handler(std::string command, CommandFunc func, TgBot::Bot& bot, CalibreApi& calibre_api) {
-    bot.getEvents().onCommand(command, std::bind(_wrapper, func, bot, std::placeholders::_1, calibre_api));
+inline void register_command_handler(std::string command, CommandFunc func, TgBot::Bot& bot) {
+    bot.getEvents().onCommand(command, std::bind(_wrapper, func, bot, std::placeholders::_1));
 }
 
 inline std::string _getenv(const char* env_name) {
@@ -92,12 +98,12 @@ int main() {
         EnvMap* envs = get_required_envs();
         TgBot::Bot bot((*envs)["token"]);
         spdlog::info("Bot Username: {}", bot.getApi().getMe()->username.c_str());
-        CalibreApi calibre_api((*envs)["calibre"]);
-        GoodreadsApi goodreads_api((*envs)["goodreads"]);
+        ApiHub::getOrInitInstance<CalibreApi>().update((*envs)["calibre"]);
+        ApiHub::getOrInitInstance<GoodreadsApi>().update((*envs)["goodreads"]);
         delete envs;
 
-        register_command_handler("book", &command_book, bot, calibre_api);
-        register_command_handler("get", &command_book_dl, bot, calibre_api);
+        register_command_handler("book", &command_book, bot);
+        register_command_handler("get", &command_book_dl, bot);
         TgBot::TgLongPoll longPoll(bot);
         while (true) {
             try{
@@ -116,5 +122,7 @@ int main() {
         }
         return 0;
     }
-    catch (InternalException) {}
+    catch (const InternalException& e) {
+        spdlog::error(e.what());
+    }
 }
