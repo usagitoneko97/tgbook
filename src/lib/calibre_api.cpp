@@ -9,10 +9,12 @@
 #include "spdlog/spdlog.h"
 #include "calibre_api.h"
 #include "exceptions.h"
+#include "logging_utils.h"
 
 std::vector<int> CalibreApi::search(const string &title) {
-    spdlog::info("searching book title: {} in calibre ip: {}", title, calibre_ip);
+    spdlog::info("searching book title: {}", title);
     string url = calibre_ip + "/ajax/search";
+    LOG_REQ("GET", url);
     cpr::Response r = cpr::Get(cpr::Url{url},
                                cpr::Parameters{{"query", title},
                                                {"sort_order", "desc"}});
@@ -23,7 +25,7 @@ std::vector<int> CalibreApi::search(const string &title) {
             string book_ids_str = "";
             for (int id : value)
                 book_ids_str += std::to_string(id) + ',';
-            spdlog::info("found books in server :{}", book_ids_str);
+            spdlog::info("found {} books in server :{}", value.size(), book_ids_str);
             return value;
         }
         catch (std::exception& e) {
@@ -39,8 +41,8 @@ std::vector<int> CalibreApi::search(const string &title) {
 }
 
 
-Book CalibreApi::locate_book(int book_id) {
-    spdlog::info("trying to locate book: {}", book_id);
+std::unique_ptr<Book> CalibreApi::locate_book(int book_id) {
+    spdlog::info("Locating book by id: {}", book_id);
     std::map<string ,string> format_path;
 
     string url = calibre_ip + "/ajax/book/" + std::to_string(book_id);
@@ -55,7 +57,7 @@ Book CalibreApi::locate_book(int book_id) {
                 string p = book_json.at("format_metadata").at(f).at("path").get<string>();
                 format_path[f] = p;
             }
-            return Book(title, authors, book_id, formats, format_path);
+            return std::make_unique<Book>(title, authors, book_id, formats, format_path);
         }
         catch (std::exception& e) {
             throw CalibreException("Couldn't process response for book id {}", book_id);
@@ -67,6 +69,21 @@ Book CalibreApi::locate_book(int book_id) {
     else {
         throw CalibreException("unknown response code while running {}. Please check calibre connection.", url);
     }
+}
+
+std::unique_ptr<std::vector<Book>> CalibreApi::locate_book(const std::string &title){
+    /*
+     * Locate book with the title. Perform two api call under the hood.
+     * 1. search book with `search()` and returns book ids.
+     * 2. get the data for each book by `locate_book(id)`.
+     * */
+    spdlog::info("locating book by title: {}", title);
+    std::vector<int> book_ids = search(title);
+    auto books_found = std::make_unique<std::vector<Book>>();
+    for (int id : book_ids) {
+        books_found->emplace_back(*locate_book(id));
+    }
+    return books_found;
 }
 
 string CalibreApi::get_book_path(int book_id, const string& format) {

@@ -12,7 +12,6 @@
 #include "exceptions.h"
 #include "api_instance.h"
 
-using namespace std;
 using namespace TgBot;
 
 using CommandFunc = std::function<void(TgBot::Bot& bot, const TgBot::Message::Ptr message)>;
@@ -33,26 +32,28 @@ void command_book(TgBot::Bot& bot, const TgBot::Message::Ptr message) {
     std::shared_ptr<BookParser> parser = Parser<BookParser>().parse(message->text);
     switch(parser->getMode()) {
         case BookParser::TITLE: {
-            std::vector<int> book_ids = calibre_api.search(parser->getBookIdentifier());
-            std::vector<Book> books_found;
-            string messages("books available in server:\n");
-            for (int id : book_ids) {
-                Book located_book = calibre_api.locate_book(id);
-                books_found.emplace_back(located_book);
-                messages += located_book.dump() += "\n";
+            std::string messages("books available in server:\n");
+            auto located_book = calibre_api.locate_book(parser->getBookIdentifier());
+            for (const auto& book : *located_book) {
+                messages += book.dump() += "\n";
             }
             try{
                 bot.getApi().sendMessage(message->chat->id, messages);
+                spdlog::info("successfully sent message to chat id: {}", message->chat->id);
             }
             catch (std::exception& e) {
                 spdlog::warn("Message length is too long.");
                 messages = messages.substr(0, 4000);
                 messages += "\n\n REDACTED since it's too long. Try to scope down the search";
                 bot.getApi().sendMessage(message->chat->id, messages);
+                spdlog::info("successfully sent message to chat id: {}", message->chat->id);
             }
+            break;
         }
         case BookParser::ISBN: {
             // Search Isbn in goodreads for the title. And use it
+            std::shared_ptr<Book> book = goodreads_api.get_book_review(GoodreadsApi::ISBN, parser->getBookIdentifier());
+            std::vector<int> book_ids = calibre_api.search(book.get()->getTitle());
         }
     }
 }

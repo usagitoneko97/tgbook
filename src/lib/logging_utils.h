@@ -5,6 +5,6 @@
 #ifndef TGBOOK_LOGGING_UTILS_H
 #define TGBOOK_LOGGING_UTILS_H
 
-#define LOG_REQ(msg, meth)   spdlog::info("Sending {} request: {}", meth, msg)
+#define LOG_REQ(meth, url)   spdlog::info("Sending {} request: {}", meth, url)
 
 #endif // TGBOOK_LOGGING_UTILS_H
