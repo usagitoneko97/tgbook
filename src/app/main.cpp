@@ -24,6 +24,9 @@ inline void _wrapper(CommandFunc& func, TgBot::Bot& bot, const TgBot::Message::P
     catch (CalibreException& e) {
         throw TgBookException(bot, message->chat->id, e.what());
     }
+    catch (GoodreadsException& e) {
+        throw TgBookException(bot, message->chat->id, e.what());
+    }
 }
 
 void command_book(TgBot::Bot& bot, const TgBot::Message::Ptr message) {
@@ -32,6 +35,7 @@ void command_book(TgBot::Bot& bot, const TgBot::Message::Ptr message) {
     std::shared_ptr<BookParser> parser = Parser<BookParser>().parse(message->text);
     switch(parser->getMode()) {
         case BookParser::TITLE: {
+            spdlog::info("TITLE mode selected.");
             std::string messages("books available in server:\n");
             auto located_book = calibre_api.locate_book(parser->getBookIdentifier());
             for (const auto& book : *located_book) {
@@ -52,8 +56,24 @@ void command_book(TgBot::Bot& bot, const TgBot::Message::Ptr message) {
         }
         case BookParser::ISBN: {
             // Search Isbn in goodreads for the title. And use it
-            std::shared_ptr<Book> book = goodreads_api.get_book_review(GoodreadsApi::ISBN, parser->getBookIdentifier());
-            std::vector<int> book_ids = calibre_api.search(book.get()->getTitle());
+            spdlog::info("ISBN mode selected.");
+            std::shared_ptr<Book> book = goodreads_api.search(parser->getBookIdentifier());
+            auto located_book = calibre_api.locate_book(book.get()->getTitle());
+            std::string messages("books available in server:\n");
+            for (const auto& book : *located_book) {
+                messages += book.dump() += "\n";
+            }
+            try{
+                bot.getApi().sendMessage(message->chat->id, messages);
+                spdlog::info("successfully sent message to chat id: {}", message->chat->id);
+            }
+            catch (std::exception& e) {
+                spdlog::warn("Message length is too long.");
+                messages = messages.substr(0, 4000);
+                messages += "\n\n REDACTED since it's too long. Try to scope down the search";
+                bot.getApi().sendMessage(message->chat->id, messages);
+                spdlog::info("successfully sent message to chat id: {}", message->chat->id);
+            }
         }
     }
 }

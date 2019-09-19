@@ -54,11 +54,24 @@ class CalibreException : public InternalException {
   public:
     explicit CalibreException(const string message="TgBook exception") : InternalException(message) {
         spdlog::error(message);
+        spdlog::error("{}: {}", "[CALIBRE]", message);
     }
 
     template<typename... Args>
     explicit CalibreException(const string &m, const Args &... args) : InternalException(m, args...) {
-        spdlog::error(this->what());
+        spdlog::error("{}: {}", "[CALIBRE]", this->what());
+    }
+};
+
+class GoodreadsException : public InternalException {
+  public:
+    explicit GoodreadsException(const string message="Goodreads exception") : InternalException(message) {
+        spdlog::error("{}: {}", "[GOODREADS]", message);
+    }
+
+    template<typename... Args>
+    explicit GoodreadsException(const string &m, const Args &... args) : InternalException(m, args...) {
+        spdlog::error("{}: {}", "[GOODREADS]", this->what());
     }
 };
 
