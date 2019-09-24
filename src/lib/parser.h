@@ -11,6 +11,7 @@
 #include <string>
 #include <memory>
 #include <map>
+#include "exceptions.h"
 
 template<class T>
 class Parser {
@@ -80,9 +81,12 @@ public:
 
     void construct(std::vector<std::string> commands) {
         // ignore the first command
-        book_id = std::stoi(commands[1]);
         if (commands.size() >= 3) {
+            book_id = std::stoi(commands[1]);
             book_format = commands[2];
+        }
+        else {
+            throw ParserException("Expected field after commands");
         }
     }
 

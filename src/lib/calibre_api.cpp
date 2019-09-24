@@ -77,6 +77,9 @@ std::unique_ptr<std::vector<Book>> CalibreApi::locate_book(const std::string &ti
      * 1. search book with `search()` and returns book ids.
      * 2. get the data for each book by `locate_book(id)`.
      * */
+    if (title.length() == 0) {
+        throw CalibreException("Empty title string");
+    }
     spdlog::info("locating book by title: {}", title);
     std::vector<int> book_ids = search(title);
     auto books_found = std::make_unique<std::vector<Book>>();

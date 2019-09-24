@@ -16,16 +16,19 @@ using namespace TgBot;
 
 using CommandFunc = std::function<void(TgBot::Bot& bot, const TgBot::Message::Ptr message)>;
 
-inline void _wrapper(CommandFunc& func, TgBot::Bot& bot, const TgBot::Message::Ptr& message) {
+inline void _wrapper(CommandFunc& func, TgBot::Bot& bot, string& help_message, const TgBot::Message::Ptr& message) {
     try{
         spdlog::info("received commands : {}", message->text);
         func(bot, message);
     }
     catch (CalibreException& e) {
-        throw TgBookException(bot, message->chat->id, e.what());
+        throw TgBookException(bot, message->chat->id, fmt::format("{}\n{}", e.what(), help_message));
     }
     catch (GoodreadsException& e) {
-        throw TgBookException(bot, message->chat->id, e.what());
+        throw TgBookException(bot, message->chat->id, fmt::format("{}\n{}", e.what(), help_message));
+    }
+    catch (ParserException& e) {
+        throw TgBookException(bot, message->chat->id, fmt::format("{}\n{}", e.what(), help_message));
     }
 }
 
@@ -95,8 +98,9 @@ void command_info(TgBot::Bot& bot, const TgBot::Message::Ptr message) {
                              fmt::format("Total number of books available: {}", to_string(books_size)));
 }
 
-inline void register_command_handler(std::string command, CommandFunc func, TgBot::Bot& bot) {
-    bot.getEvents().onCommand(command, std::bind(_wrapper, func, bot, std::placeholders::_1));
+inline void register_command_handler(std::string command, CommandFunc func, TgBot::Bot& bot, string &&help_message) {
+    bot.getEvents().onCommand(
+        command, std::bind(_wrapper, func, bot, std::forward<std::string>(help_message), std::placeholders::_1));
 }
 
 inline std::string _getenv(const char* env_name) {
@@ -131,9 +135,16 @@ int main() {
         ApiHub::getOrInitInstance<GoodreadsApi>().update((*envs)["goodreads"]);
         delete envs;
 
-        register_command_handler("book", &command_book, bot);
-        register_command_handler("get", &command_book_dl, bot);
-        register_command_handler("info", &command_info, bot);
+        register_command_handler("book", &command_book, bot,
+            "Command: \n"
+            "/book <title string>\n"
+            "/book --isbn <ISBN number>\n"
+            );
+        register_command_handler("get", &command_book_dl, bot,
+            "Command: \n"
+            "/get <book-id> <book-format>\n"
+            );
+        register_command_handler("info", &command_info, bot, "");
         TgBot::TgLongPoll longPoll(bot);
         while (true) {
             try{

@@ -53,7 +53,6 @@ private:
 class CalibreException : public InternalException {
   public:
     explicit CalibreException(const string message="TgBook exception") : InternalException(message) {
-        spdlog::error(message);
         spdlog::error("{}: {}", "[CALIBRE]", message);
     }
 
@@ -75,4 +74,17 @@ class GoodreadsException : public InternalException {
     }
 };
 
+
+class ParserException : public InternalException {
+  public:
+    explicit ParserException(const string message="Parser exception") : InternalException(message) {
+        spdlog::error("{}: {}", "[PARSER]", message);
+    }
+
+    template<typename... Args>
+    explicit ParserException(const string &m, const Args &... args) : InternalException(m, args...) {
+        spdlog::error("{}: {}", "[PARSER]", this->what());
+    }
+
+};
 #endif //TGBOOK_EXCEPTIONS_H
