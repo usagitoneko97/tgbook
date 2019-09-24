@@ -87,6 +87,14 @@ void command_book_dl(TgBot::Bot& bot, const TgBot::Message::Ptr message) {
     spdlog::info("successfully sent document to chat id: {}", message->chat->id);
 }
 
+
+void command_info(TgBot::Bot& bot, const TgBot::Message::Ptr message) {
+    CalibreApi calibre_api = ApiHub::getOrInitInstance<CalibreApi>();
+    int books_size = calibre_api.get_info();
+    bot.getApi().sendMessage(message->chat->id,
+                             fmt::format("Total number of books available: {}", to_string(books_size)));
+}
+
 inline void register_command_handler(std::string command, CommandFunc func, TgBot::Bot& bot) {
     bot.getEvents().onCommand(command, std::bind(_wrapper, func, bot, std::placeholders::_1));
 }
@@ -125,6 +133,7 @@ int main() {
 
         register_command_handler("book", &command_book, bot);
         register_command_handler("get", &command_book_dl, bot);
+        register_command_handler("info", &command_info, bot);
         TgBot::TgLongPoll longPoll(bot);
         while (true) {
             try{

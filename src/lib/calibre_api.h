@@ -22,6 +22,7 @@ class CalibreApi {
     std::unique_ptr<Book> locate_book(int book_id);
     std::unique_ptr<std::vector<Book>> locate_book(const std::string &title);
     string get_book_path(int book_id, const string &format);
+    int get_info();
 
   private:
     string calibre_ip;

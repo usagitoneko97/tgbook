@@ -109,3 +109,20 @@ string CalibreApi::get_book_path(int book_id, const string& format) {
         throw CalibreException("Error parsing the response. Is the server running? Is the url correct?");
     }
 }
+
+int CalibreApi::get_info() {
+    // Getting the number of books for now. Can be extend in the future.
+    spdlog::info("Getting Info on calibre server");
+    string url = calibre_ip + "/ajax/books";
+    LOG_REQ("GET", url);
+    auto book_response = cpr::Get(cpr::Url{url});
+    if (book_response.status_code == 200) {
+        nlohmann::json books = nlohmann::json::parse(book_response.text);
+        int size = books.size();
+        spdlog::info("Found {} number of books in calibre server", size);
+        return size;
+    }
+    else{
+        throw CalibreException("unknown response code while running {}", url);
+    }
+}
